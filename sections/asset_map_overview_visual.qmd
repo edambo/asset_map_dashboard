@@ -1,0 +1,223 @@
+---
+title: "Asset Map Overview"
+format: html
+fig-responsive: false
+---
+
+# Purpose 
+The purpose of the code in this file is to reproduce the draft of the asset map digital display but with actual interactive qualities and mock data.
+
+# Libraries
+```{r, include = FALSE}
+library(png) # read png image
+library(RCurl) # read png files
+library(plotly)
+library(htmlwidgets) # to use the 'onRender' function
+library(here)
+library(dplyr)
+library(ggplot2)
+
+```
+
+```{r, echo = FALSE}
+img <- readPNG(here("graphics", "high_level_map_draft.png"))
+plot.new() 
+rasterImage(img,0,0,1,1)
+
+```
+
+
+coolors palette:
+<https://colorkit.co/color-palette-generator/003f5c-2c4875-58508d-8a508f-bc5090-de5a79-ff6361-ff8531-ffa600/>
+```{r, echo = FALSE}
+# Create data frame for map
+
+x_ax <- c(550, 486, 452, 463, 516, 584, 637, 648, 614)
+y_ax <- c(450, 473, 533, 600, 644, 644, 600, 533, 473)
+# categories
+cat <- c("Behavioral\nHealth\nServices", "Substance Use\nTreatment", "Housing\nAssistance", "Healthcare\nServices", 
+         "Community\n Policing\nInitiatives", 
+         "Legal Aid &\nAdvocacy", "Legal Diversion\nSupports", "Reentry\n Support", "Community\nEngagement &\nAwareness" )
+
+cols <- c("#003f5c",  "#2c4875", "#58508d", "#8a508f", "#bc5090", "#de5a79", "#ff6361", "#ff8531", "#ffa600")
+# Urls
+urls <- c("http://google.com", "https://stackoverflow.com", "http://google.com", "https://stackoverflow.com", "http://google.com",
+          "https://stackoverflow.com", "http://google.com", "https://stackoverflow.com", "http://google.com")
+
+a_map <- data.frame(x_ax, y_ax, cols, cat, urls)
+```
+
+```{r, echo = FALSE}
+# Add values for circle co-ordinates and colors to the data frame
+
+a_map <- a_map %>% 
+  mutate(
+    x0 = x_ax - 18,
+    x1 = x_ax + 18,
+    y0 = y_ax - 30,
+    y1 = y_ax + 30,
+    x0_d = x0 - 0.75,
+    x1_d = x1 - 0.75,
+    y0_d = y0 - 1,
+    y1_d = y1 - 1,
+  )
+
+```
+
+```{r, echo = FALSE}
+# add values for circles to list
+large_list <- list()
+large_list <- by(a_map, seq_len(nrow(a_map)), function(r){
+  x_0 <- as.numeric(r["x0"])
+  x_1 <- as.numeric(r["x1"])
+  y_0 <- as.numeric(r["y0"])
+  y_1 <- as.numeric(r["y1"])
+  co <- as.character(r["cols"])
+  
+s_list <- list(type = 'circle',
+               xref = 'x', x0 = x_0, x1 = x_1,
+               yref = 'y', y0 = y_0, y1 = y_1,
+               fillcolor = co, line = list(color = co),
+               opacity = 1,
+               layer="below")
+large_list <- append(large_list, s_list)
+
+}
+  )
+
+shape_list <- unname(large_list)
+```
+
+```{r, echo = FALSE}
+# Add drop shadow
+# drop_shadow_list <- list()
+# 
+# drop_shadow_list <- by(a_map, seq_len(nrow(a_map)), function(r){
+#   x_0_d <- as.numeric(r["x0_d"])
+#   x_1_d <- as.numeric(r["x1_d"])
+#   y_0_d <- as.numeric(r["y0_d"])
+#   y_1_d <- as.numeric(r["y1_d"])
+#   co <- as.character(r["cols"])
+#   
+# s_list <- list(type = 'circle',
+#                xref = 'x', x0 = x_0_d, x1 = x_1_d,
+#                yref = 'y', y0 = y_0_d, y1 = y_1_d,
+#                fillcolor = co, line = list(color = co),
+#                opacity = 0.50,
+#                layer="below")
+# drop_shadow_list <- append(drop_shadow_list, s_list)
+# 
+# }
+#   )
+# 
+# drop_shadow_list <- unname(drop_shadow_list)
+```
+
+```{r, echo = FALSE}
+# shape_list <- list()
+# for(i in drop_shadow_list){
+#   shape_list <- append(large_list, drop_shadow_list)
+# }
+```
+
+```{r, include = FALSE}
+# Load background image
+back_img <- here("graphics", "asset_map_bg.png")
+
+img_txt <- RCurl::base64Encode(readBin(back_img, "raw", file.info(back_img)[1, "size"]), "txt")
+```
+
+
+
+<https://stackoverflow.com/questions/56084819/open-link-on-datapoint-click-with-plotly-in-r-shiny>
+
+```{r, fig.align = 'center', echo = FALSE}
+p <- a_map %>% highlight_key(~x_ax) %>% plot_ly(type = "scatter", mode = "markers+text",
+             text = ~cat, textposition = "middle center",
+              marker = list(
+                color = 'black',
+                symbol = "circle",
+                size = 120,
+                opacity = 0.08),
+             textfont = list(color = '#fff', size = 13),
+             x = ~ x_ax, y = ~y_ax, 
+             customdata = ~ urls,
+             width = 1050,
+             height = 675) %>%
+  # Remove hover info
+  style(hoverinfo = 'none') %>%
+  
+  # Layout
+  layout(xaxis = list(zerolinecolor = '#ffff',
+                      zerolinewidth = 2,
+                      gridcolor = 'ffff',
+                      range = list(415, 710), showgrid = F,
+                      showticklabels = FALSE,
+                      title = FALSE,
+                      fixedrange = TRUE
+                      ),
+         yaxis = list(
+                     zerolinecolor = '#ffff',
+                     zerolinewidth = 2,
+                     gridcolor = 'ffff',
+                     range = list(400, 700), showgrid = F,
+                     showticklabels = FALSE,
+                     title = FALSE,
+                     fixedrange = TRUE),
+         # add shapes
+         shapes = shape_list,
+         # Add background
+        images = list(
+          list(
+            source =  paste('data:image/png;base64', img_txt, sep=','),
+            xref = "x",
+            yref = "y",
+            x = 400,
+            y = 700,
+            sizex = 295,
+            sizey = 300,
+            sizing = "stretch",
+            opacity = 1,
+            layer = "below"
+      )
+    ),
+    showlegend = F
+         )%>%
+ highlight(on = 'plotly_hover', off = NULL, 
+           opacityDim = getOption("opacityDim", 1),
+           color = "black",
+           showlegend = FALSE,
+           selected = attrs_selected(mode = "markers", opacity = 0.7)
+           ) 
+# Disable modebar
+p <- config(p, displayModeBar = FALSE)
+
+js <- "
+function(el, x) {
+  el.on('plotly_click', function(d) {
+    var point = d.points[0];
+    var url = point.data.customdata[point.pointIndex];
+    window.open(url, target = '_self');
+  })
+}"
+
+p %>% onRender(js)
+
+```
+
+
+
+
+Play with text size, color etc:
+<https://plotly.com/r/text-and-annotations/>
+
+Co-ordinates for nonagon:
+<https://www.mathopenref.com/coordpolycalc.html>
+
+
+If not, consider image maps:
+<https://www.w3schools.com/html/html_images_imagemap.asp>
+
+
+Check to see if we can use the buttons instead of points as input:
+<https://plotly-r.com/supplying-custom-data.html#:~:text=The%20customdata%20attribute%20can%20hold%20any%20R%20object>
