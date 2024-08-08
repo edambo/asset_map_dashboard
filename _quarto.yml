@@ -2,22 +2,25 @@ project:
   type: website
 
 website:
-  title: "asset_map_website"
+  title: "Travis County Justice Department Asset Map Website"
   navbar:
     left:
-      - href: sections/index.qmd
+      - href: index.qmd
         text: Home
-      - sections/about.qmd
-      - sections/asset_map_overview_visual.qmd
+      - href: sections/asset_map_overview_visual.qmd
+        text: Asset Map Dashboard
+      - href: sections/resources.qmd
+        text: Resources
 
 format:
   html:
     page-layout: full
     theme: 
-    - cosmo
-    - assets/custom_styles.css # custom formatting for value boxes
-    css: styles.css
+    - sandstone
+    - assets/custom_style.css # custom formatting for value boxes
+    css: assets/custom_styles.css # custom formatting for value boxes
     toc: false
-
+execute:
+  freeze: auto
 
 

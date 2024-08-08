@@ -1,223 +1,324 @@
 ---
-title: "Asset Map Overview"
-format: html
-fig-responsive: false
+format: 
+  dashboard
+orientation: rows
+scrolling: true 
 ---
 
-# Purpose 
-The purpose of the code in this file is to reproduce the draft of the asset map digital display but with actual interactive qualities and mock data.
+<!-- # All {orientation="columns" scrolling="true"} -->
 
-# Libraries
 ```{r, include = FALSE}
-library(png) # read png image
-library(RCurl) # read png files
+# Libraries
 library(plotly)
-library(htmlwidgets) # to use the 'onRender' function
+# library(htmlwidgets) # to use the 'onRender' function
 library(here)
 library(dplyr)
 library(ggplot2)
-
+library(DT)
+library(crosstalk)
+library(forcats, include.only = c("fct_reorder"))
+library(readxl)
+library(tidyr)
+library(leaflet)
+library(zipcodeR)
+library(tigris)
+library(sf)
 ```
 
-```{r, echo = FALSE}
-img <- readPNG(here("graphics", "high_level_map_draft.png"))
-plot.new() 
-rasterImage(img,0,0,1,1)
+```{r, include=FALSE}
+source(here::here("R", "month_name_year.R"))
+```
 
+<!-- Load data -->
+
+```{r, include=FALSE}
+
+cat_data <- readxl::read_xlsx(here::here("data", "community_resources_map_data.xlsx"), sheet = "program_categories")
 ```
 
 
-coolors palette:
-<https://colorkit.co/color-palette-generator/003f5c-2c4875-58508d-8a508f-bc5090-de5a79-ff6361-ff8531-ffa600/>
-```{r, echo = FALSE}
-# Create data frame for map
-
-x_ax <- c(550, 486, 452, 463, 516, 584, 637, 648, 614)
-y_ax <- c(450, 473, 533, 600, 644, 644, 600, 533, 473)
-# categories
-cat <- c("Behavioral\nHealth\nServices", "Substance Use\nTreatment", "Housing\nAssistance", "Healthcare\nServices", 
-         "Community\n Policing\nInitiatives", 
-         "Legal Aid &\nAdvocacy", "Legal Diversion\nSupports", "Reentry\n Support", "Community\nEngagement &\nAwareness" )
-
-cols <- c("#003f5c",  "#2c4875", "#58508d", "#8a508f", "#bc5090", "#de5a79", "#ff6361", "#ff8531", "#ffa600")
-# Urls
-urls <- c("http://google.com", "https://stackoverflow.com", "http://google.com", "https://stackoverflow.com", "http://google.com",
-          "https://stackoverflow.com", "http://google.com", "https://stackoverflow.com", "http://google.com")
-
-a_map <- data.frame(x_ax, y_ax, cols, cat, urls)
-```
-
-```{r, echo = FALSE}
-# Add values for circle co-ordinates and colors to the data frame
-
-a_map <- a_map %>% 
+```{r, include=FALSE}
+# Contact data
+add_data <- readxl::read_xlsx(here::here("data", "community_resources_map_data.xlsx"), sheet = "program_info") %>% 
+  select(program, address) %>%
+   tidyr::separate_wider_delim(address, delim = ",", names = c("street_address", "city", "state", "zipcode")) %>%
   mutate(
-    x0 = x_ax - 18,
-    x1 = x_ax + 18,
-    y0 = y_ax - 30,
-    y1 = y_ax + 30,
-    x0_d = x0 - 0.75,
-    x1_d = x1 - 0.75,
-    y0_d = y0 - 1,
-    y1_d = y1 - 1,
+    zipcode = gsub(" ", "", zipcode, fixed = TRUE)
   )
 
+# Generate logitude and latitude data for each zipcode
+long_lat <- geocode_zip(add_data$zipcode)
+
+# Manually add missing long and lat values for zipcode 78767
+long_lat[4,2] <- 30.269806126148378 
+long_lat[4,3] <- -97.73965108465788
+
+
+# Combine the long lat data with the rest of the address data
+add_data <- add_data %>% left_join(., long_lat, by = "zipcode")
 ```
 
-```{r, echo = FALSE}
-# add values for circles to list
-large_list <- list()
-large_list <- by(a_map, seq_len(nrow(a_map)), function(r){
-  x_0 <- as.numeric(r["x0"])
-  x_1 <- as.numeric(r["x1"])
-  y_0 <- as.numeric(r["y0"])
-  y_1 <- as.numeric(r["y1"])
-  co <- as.character(r["cols"])
-  
-s_list <- list(type = 'circle',
-               xref = 'x', x0 = x_0, x1 = x_1,
-               yref = 'y', y0 = y_0, y1 = y_1,
-               fillcolor = co, line = list(color = co),
-               opacity = 1,
-               layer="below")
-large_list <- append(large_list, s_list)
 
+```{r, include=FALSE}
+# Get boundary shape data for the zipcodes
+add_data <- zctas(cb = T, starts_with = "787", class = "sf", year = 2020) %>%
+  select(zipcode = starts_with("ZCTA"), geometry) %>% right_join(., add_data, by = "zipcode" ) %>%
+  relocate(zipcode, .after = "state")
+```
+
+
+```{r, include=FALSE}
+# Create factor levels for main categories
+categories <- sort(c("Behavioral Health Services", "Substance Use Treatment", "Housing Assistance", "Healthcare Services", 
+         "Community  Policing Initiatives", 
+         "Legal Aid & Advocacy", "Legal Diversion Supports", "Reentry  Support", "Community Engagement & Awareness"))
+
+cat <- c()
+for(i in categories){
+  cat_item <- paste(strwrap(i, 16), collapse="\n")
+  cat <- append(cat, cat_item)
 }
+```
+
+
+```{r, include=FALSE}
+cat_data_f <- cat_data %>% 
+  rowwise() %>%
+  mutate(
+    # Format main categories
+    f_main_category = paste(strwrap(main_category, 16), collapse="\n"), 
+    # f_main_category = factor(f_main_category,
+    #                          levels = cat),
+    sub_category = gsub("\r\n", "", sub_category)
+  ) %>% 
+  group_by(main_category) %>%
+  mutate(
+    count_by_main = n()
+  ) %>% relocate(count_by_main, .after = main_category) %>%
+  group_by(main_category, sub_category) %>%
+  mutate(
+    count_by_sub = n()
+  ) %>% relocate(count_by_sub, .after = sub_category) %>%
+  ungroup()
+  
+cat_data_sf <- add_data %>% left_join(., cat_data_f, by = "program") %>%
+  group_by(zipcode) %>%
+  mutate(
+    count_by_zip = n()
+  ) %>%
+  ungroup()
+```
+
+
+```{r, include=FALSE}
+
+all_cats <- read.csv(here::here("data", "all_categories.csv")) %>% 
+  mutate(
+    main_category = gsub("\n", "", main_category)
+  )
+```
+
+
+<!-- Create lists of factor levels for each main category -->
+
+```{r, include=FALSE}
+main_cats <- all_cats %>% select(main_category) %>% distinct() %>% as.vector() %>% unlist()
+
+mc_levels_list <- list()
+
+for(mc in main_cats){
+  dat <- cat_data_f %>% filter(main_category == mc) %>% 
+  select(sub_category) %>% 
+  add_count(sub_category, sort = TRUE) %>% select(sub_category) %>% distinct() %>%
+    as.vector() %>% unlist()
+  
+  cats <- all_cats %>% filter(main_category == mc) %>% 
+  select(sub_category) %>%
+    as.vector() %>% unlist()
+  
+  ml <- list(union(dat, cats))
+  
+  mc_levels_list <- append(mc_levels_list, ml)
+}
+
+names(mc_levels_list) <- main_cats
+```
+
+
+# Behavioral Health Services {orientation="rows" scrolling="true"}
+
+```{r, echo=FALSE}
+
+shared_data <- cat_data_sf %>% filter(main_category == "Behavioral Health Services") %>% select(program, agency, main_category, count_by_main, sub_category, count_by_sub, zipcode, count_by_zip, lng, lat, geometry) %>% group_by(sub_category) %>% 
+  mutate(
+    sub_category = gsub("\r\n", "", sub_category),
+    sub_category = factor(sub_category,
+                          levels = rev(mc_levels_list[["Behavioral Health Services"]]))
+    )
+```
+
+<!-- # Create the hovertext labels -->
+
+```{r, include=FALSE}
+
+text_labels <- table(shared_data$sub_category) %>% as.data.frame() %>% rename(
+  sub_category = "Var1",
+  count = Freq
+) %>% arrange(sub_category) %>%
+  arrange(desc(count)) %>%
+  
+  mutate(
+    text_label = paste("Need sub-category: ", sub_category, "<br>Program: ", count) 
   )
 
-shape_list <- unname(large_list)
-```
-
-```{r, echo = FALSE}
-# Add drop shadow
-# drop_shadow_list <- list()
-# 
-# drop_shadow_list <- by(a_map, seq_len(nrow(a_map)), function(r){
-#   x_0_d <- as.numeric(r["x0_d"])
-#   x_1_d <- as.numeric(r["x1_d"])
-#   y_0_d <- as.numeric(r["y0_d"])
-#   y_1_d <- as.numeric(r["y1_d"])
-#   co <- as.character(r["cols"])
-#   
-# s_list <- list(type = 'circle',
-#                xref = 'x', x0 = x_0_d, x1 = x_1_d,
-#                yref = 'y', y0 = y_0_d, y1 = y_1_d,
-#                fillcolor = co, line = list(color = co),
-#                opacity = 0.50,
-#                layer="below")
-# drop_shadow_list <- append(drop_shadow_list, s_list)
-# 
-# }
-#   )
-# 
-# drop_shadow_list <- unname(drop_shadow_list)
-```
-
-```{r, echo = FALSE}
-# shape_list <- list()
-# for(i in drop_shadow_list){
-#   shape_list <- append(large_list, drop_shadow_list)
-# }
+text_labels <- text_labels[match(mc_levels_list[["Behavioral Health Services"]], text_labels$sub_category),] %>% 
+  select(text_label) %>%
+  as.vector() %>% unlist() %>% unname()
 ```
 
 ```{r, include = FALSE}
-# Load background image
-back_img <- here("graphics", "asset_map_bg.png")
 
-img_txt <- RCurl::base64Encode(readBin(back_img, "raw", file.info(back_img)[1, "size"]), "txt")
+test <- shared_data %>% 
+  mutate(
+    sub_cat_text = factor(sub_category, levels = rev(mc_levels_list[["Behavioral Health Services"]]), 
+                          labels = rev(text_labels))
+    ) %>% sf::st_as_sf()
 ```
 
 
+```{r, echo=FALSE}
+# For crosstalk
+shared_data_test <- SharedData$new(test, key = ~program)
 
-<https://stackoverflow.com/questions/56084819/open-link-on-datapoint-click-with-plotly-in-r-shiny>
+```
 
-```{r, fig.align = 'center', echo = FALSE}
-p <- a_map %>% highlight_key(~x_ax) %>% plot_ly(type = "scatter", mode = "markers+text",
-             text = ~cat, textposition = "middle center",
-              marker = list(
-                color = 'black',
-                symbol = "circle",
-                size = 120,
-                opacity = 0.08),
-             textfont = list(color = '#fff', size = 13),
-             x = ~ x_ax, y = ~y_ax, 
-             customdata = ~ urls,
-             width = 1050,
-             height = 675) %>%
-  # Remove hover info
-  style(hoverinfo = 'none') %>%
-  
-  # Layout
-  layout(xaxis = list(zerolinecolor = '#ffff',
-                      zerolinewidth = 2,
-                      gridcolor = 'ffff',
-                      range = list(415, 710), showgrid = F,
-                      showticklabels = FALSE,
+## Row 
+
+### Column{.tabset}
+```{r, echo = FALSE}
+#| title: By Subcategories
+cols <- c("#003f5c",  "#2c4875", "#58508d", "#8a508f", "#bc5090", "#de5a79", "#ff6361", "#ff8531", "#ffa600")
+
+r <- 12
+
+bhs <- ggplot(shared_data_test, aes(y = sub_category,
+                               text = paste(sub_cat_text)
+                               )) +
+  geom_bar(fill = "#003f5c") + 
+  geom_text(aes(label = ..count..), stat = "count", 
+            nudge_x = -0.2, color = "white") +
+  scale_fill_discrete(drop=FALSE) +
+  scale_y_discrete(drop = FALSE) + theme_classic() +
+  theme(axis.ticks.x = element_blank(),
+        axis.line = element_blank())
+
+
+
+
+ggplotly(bhs, tooltip = c("text")) %>%
+  layout(hoverlabel = list(align="left",
+                           bgcolor = "#003f5c"),
+         title = "Behavioral Health Services",
+         margin = list(t = 50), 
+         xaxis = list(showticklabels = FALSE,
                       title = FALSE,
+                      range = list(0, r),
                       fixedrange = TRUE
                       ),
-         yaxis = list(
-                     zerolinecolor = '#ffff',
-                     zerolinewidth = 2,
-                     gridcolor = 'ffff',
-                     range = list(400, 700), showgrid = F,
-                     showticklabels = FALSE,
+         yaxis = list(showticklabels = TRUE,
                      title = FALSE,
                      fixedrange = TRUE),
-         # add shapes
-         shapes = shape_list,
-         # Add background
-        images = list(
-          list(
-            source =  paste('data:image/png;base64', img_txt, sep=','),
-            xref = "x",
-            yref = "y",
-            x = 400,
-            y = 700,
-            sizex = 295,
-            sizey = 300,
-            sizing = "stretch",
-            opacity = 1,
-            layer = "below"
-      )
-    ),
-    showlegend = F
-         )%>%
- highlight(on = 'plotly_hover', off = NULL, 
-           opacityDim = getOption("opacityDim", 1),
-           color = "black",
-           showlegend = FALSE,
-           selected = attrs_selected(mode = "markers", opacity = 0.7)
-           ) 
-# Disable modebar
-p <- config(p, displayModeBar = FALSE)
-
-js <- "
-function(el, x) {
-  el.on('plotly_click', function(d) {
-    var point = d.points[0];
-    var url = point.data.customdata[point.pointIndex];
-    window.open(url, target = '_self');
-  })
-}"
-
-p %>% onRender(js)
+         showlegend = F) %>%
+  style(hoverinfo = 'none', traces = c(1),
+        textposition = "none") %>%
+  highlight(on = "plotly_click", off = "plotly_doubleclick")
 
 ```
 
 
 
+```{r, echo = FALSE}
+#| title: By Zipcode
 
-Play with text size, color etc:
-<https://plotly.com/r/text-and-annotations/>
+bscols(widths = c(12),
+  list(
+    filter_select("zip", "Zipcodes", shared_data_test, ~zipcode)
+  )
 
-Co-ordinates for nonagon:
-<https://www.mathopenref.com/coordpolycalc.html>
+)
+                
+```
+### Column
+
+```{r, echo=FALSE}
+orig_data <- function(var){
+  dat <- shared_data_test$origData() %>% as.data.frame()
+  dat %>% select({{var}})
+}
+
+pal <- colorNumeric(
+  palette = "Greens",
+  domain = c(0:max(orig_data(data(count_by_zip)))))
+
+austin <- c(-97.73996, 30.26734)
+
+m <- shared_data_test %>% leaflet() %>% setView(lng = austin[1], lat = austin[2], zoom = 10)
+
+m %>% addProviderTiles("CartoDB") %>%
+  # add zip codes
+  # addPolygons(fillColor = ~pal(count_by_sub),
+  #             weight = 2,
+  #             opacity = 1,
+  #             color = "white",
+  #             dashArray = "3",
+  #             fillOpacity = 0.7,
+  #             highlight = highlightOptions(weight = 2,
+  #                                          color = "#666",
+  #                                          dashArray = "",
+  #                                          fillOpacity = 0.7,
+  #                                          bringToFront = TRUE),
+  #             label = ~zipcode) %>%
+  # add legend
+  addLegend(pal = pal, 
+            values = ~count_by_zip, 
+            opacity = 0.7, 
+            title = "Number of Programs",
+            position = "bottomright") %>%
+  addCircleMarkers(lng = ~lng, lat = ~lat,
+                   fillOpacity = 0.7, radius = 9,
+                   fillColor = ~pal(count_by_zip),
+                   color = ~"black",
+                   stroke = FALSE,
+                   label = ~zipcode)
+```
+
+## Row
+
+```{r, echo = FALSE}
+#| title: Data
+dt_table <- shared_data_test %>%
+  datatable(
+    colnames = c("Program", "Agency",  "Need Category", 
+                 "Count by Need category", "Sub Category", 
+                 "Count by Sub-category", "Zipcode", "Count by Zipcode", "Lng",
+                 "Lat", "Geometry", "Text label"),
+    extensions = "Buttons",
+    options = list(
+      columnDefs = list(list(visible = FALSE, targets = c(9,10,11,12))),
+      buttons = c("csv", "excel"),
+      text = "Download",
+      # paging = TRUE,
+      # lengthMenu = c(5, 10, 25),
+      # pageLength = 10,
+      dom = "Bfrtip",
+      scrollX = TRUE
+    )
+  )
+dt_table
+```
 
 
-If not, consider image maps:
-<https://www.w3schools.com/html/html_images_imagemap.asp>
 
 
-Check to see if we can use the buttons instead of points as input:
-<https://plotly-r.com/supplying-custom-data.html#:~:text=The%20customdata%20attribute%20can%20hold%20any%20R%20object>
+
+
