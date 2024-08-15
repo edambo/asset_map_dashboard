@@ -2,13 +2,15 @@ project:
   type: website
 
 website:
-  title: "Travis County Justice Department Asset Map Website"
+  title: "Asset Map"
   navbar:
     left:
       - href: index.qmd
         text: Home
-      - href: sections/asset_map_overview_visual.qmd
-        text: Asset Map Dashboard
+      - href: sections/asset_map_dashboards.qmd
+        text: Asset Map Dashboards
+      - href: sections/demographics.qmd
+        text: Demographics
       - href: sections/resources.qmd
         text: Resources
 

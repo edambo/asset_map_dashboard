@@ -8,10 +8,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Merriweather');
 
-/*Hide some items from the page navigation bar*/
+/*Hide some items from the page navigation bar
 a#tab-all.nav-link {
   display: none !important;
-} 
+} */
 
 
 /*Make cursor default arrow 

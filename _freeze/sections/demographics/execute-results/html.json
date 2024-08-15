@@ -1,0 +1,17 @@
+{
+  "hash": "198afc0b0c329459e359d71679dbcbd2",
+  "result": {
+    "engine": "knitr",
+    "markdown": "\n\n\n\n\n\n::: {.cell}\n\n:::\n\n::: {.cell}\n\n:::\n",
+    "supporting": [
+      "demographics_files"
+    ],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

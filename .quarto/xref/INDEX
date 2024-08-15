@@ -19,5 +19,14 @@
   },
   "sections/resources.qmd": {
     "resources.html": "6c75d02d"
+  },
+  "data_cleaning/data_cleaning.qmd": {
+    "data_cleaning.html": "548c72e3"
+  },
+  "sections/asset_map_dashboards.qmd": {
+    "asset_map_dashboards.html": "6431d1ba"
+  },
+  "sections/demographics.qmd": {
+    "demographics.html": "c35300cc"
   }
 }
