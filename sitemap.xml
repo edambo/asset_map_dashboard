@@ -2,22 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://edambo.github.io/asset_map_dashboard/sections/resources.html</loc>
-    <lastmod>2024-08-15T18:14:33.180Z</lastmod>
+    <lastmod>2024-08-28T03:09:48.127Z</lastmod>
   </url>
   <url>
-    <loc>https://edambo.github.io/asset_map_dashboard/sections/asset_map_dashboards.html</loc>
-    <lastmod>2024-08-15T18:53:57.313Z</lastmod>
+    <loc>https://edambo.github.io/asset_map_dashboard/sections/demographics_dash.html</loc>
+    <lastmod>2024-08-29T18:33:22.785Z</lastmod>
+  </url>
+  <url>
+    <loc>https://edambo.github.io/asset_map_dashboard/index.html</loc>
+    <lastmod>2024-08-19T21:35:56.759Z</lastmod>
   </url>
   <url>
     <loc>https://edambo.github.io/asset_map_dashboard/data_cleaning/data_cleaning.html</loc>
     <lastmod>2024-08-15T00:36:16.247Z</lastmod>
   </url>
   <url>
-    <loc>https://edambo.github.io/asset_map_dashboard/index.html</loc>
-    <lastmod>2024-08-15T17:47:10.364Z</lastmod>
+    <loc>https://edambo.github.io/asset_map_dashboard/sections/asset_map_dashboards.html</loc>
+    <lastmod>2024-08-29T16:18:01.086Z</lastmod>
   </url>
   <url>
-    <loc>https://edambo.github.io/asset_map_dashboard/sections/demographics.html</loc>
-    <lastmod>2024-08-15T18:38:52.246Z</lastmod>
+    <loc>https://edambo.github.io/asset_map_dashboard/sections/demographics_tables.html</loc>
+    <lastmod>2024-08-29T16:19:56.955Z</lastmod>
   </url>
 </urlset>
