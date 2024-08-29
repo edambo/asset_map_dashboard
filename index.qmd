@@ -9,7 +9,7 @@ library(dplyr)
 library(ggplot2)
 ```
 
-The Justice Planning Department created this resource map to help professionals, programs and other members of the community identify resources available for support and collaboration, along with resources needed based on gaps in the community.
+The Innovative Justice and Program Analysis Department created this resource map to help professionals, programs and other members of the community identify resources available for support and collaboration, along with resources needed based on gaps in the community.
 
 Individuals looking for specific assistance should call 211 to be quickly referred to the appropriate service.
 

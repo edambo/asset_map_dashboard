@@ -75,7 +75,7 @@ asset_flextable <- function(program_name, table_list = bhs_table_list) {
   # Set link text
   link <- df["values"][df["items"] == "Website"]
   
-  # Set up table header line text including variable name and description
+  # Set up table header line text to include the program name
   title_cap <- as_paragraph(program_name, "\n")
     
     # Create flextable

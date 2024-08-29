@@ -9,8 +9,10 @@ website:
         text: Home
       - href: sections/asset_map_dashboards.qmd
         text: Asset Map Dashboards
-      - href: sections/demographics.qmd
-        text: Demographics
+      - text: Demographics
+        menu: 
+          - href: sections/demographics_tables.qmd
+          - href: sections/demographics_dash.qmd
       - href: sections/resources.qmd
         text: Resources
 

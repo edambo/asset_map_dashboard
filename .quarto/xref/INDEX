@@ -28,5 +28,11 @@
   },
   "sections/demographics.qmd": {
     "demographics.html": "c35300cc"
+  },
+  "sections/demographics_dash.qmd": {
+    "demographics_dash.html": "c6c668a5"
+  },
+  "sections/demographics_tables.qmd": {
+    "demographics_tables.html": "9936d5d8"
   }
 }
