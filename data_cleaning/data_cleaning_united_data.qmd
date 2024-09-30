@@ -1,0 +1,625 @@
+# Purpose
+The purpose of this file is to ensure the data provided by United Way is in the appropriate format for
+creating the dashboard in a visually appealing and meaningful way.
+
+# Load Libraries
+```{r, include = FALSE}
+library(here)
+library(dplyr)
+library(readxl)
+library(writexl)
+library(janitor)
+library(stringdist)
+library(stringr)
+library(openxlsx)
+library(tidyr, include.only = c("unite", "separate", "separate_longer_delim"))
+```
+
+# Load data and custom functions
+```{r, include=FALSE}
+path <-  here::here("data", "united_way_data.xlsx")
+
+# United Way Data
+uw_agency <- readxl::read_xlsx(
+  path,
+  sheet = "Agency") %>%
+  clean_names() %>% remove_empty("cols")
+
+uw_service <- readxl::read_xlsx(
+  path,
+  sheet = "Service") %>%
+  clean_names() %>% remove_empty("cols")
+
+uw_site <- readxl::read_xlsx(
+  path,
+  sheet = "Site") %>%
+  clean_names() %>% remove_empty("cols")
+
+# # Lists of main and subcategories
+# cat_list <- read.csv(here::here("data", "all_categories.csv")) %>% 
+#   mutate(
+#     main_category = gsub("\n", "", main_category)
+#   )
+
+# Lists of categorizing keywords
+load(here::here("data", "keyword_lists.RData"))
+load(here::here("data", "sub_cat_keyword_lists.RData"))
+
+source(here::here("R", "match_count.R"))
+```
+
+# Clean Data
+## Select relevant columns from each dataset
+### agency
+```{r}
+
+agency <- uw_agency %>% 
+  select(agency_id, contains("name"), contains("aka"), contains("description"), 
+         contains("websiteurl"), (contains("address") & 
+                                    (matches("_[0-9]") | contains("_city") |
+                                       contains("_county") | contains("_state")|
+                                       contains("_zip") | contains("_country") |
+                                       contains("_notes") | contains("itude")) &
+                                    !(matches("international") | 
+                                        matches("mailing"))),
+         contains("_ada_acccess"), agency_option_irs_status
+                               ) %>%
+  # Rename columns to remove "agency_addressus" prefix
+  rename_with(~gsub("agency_addressus_", "", .),
+              everything()) %>%
+    # Remove "system" from column names
+  rename_with(~gsub("_system", "", .),
+              everything()) %>%
+  mutate(
+    # Remove square bracket and quotation marks
+    agency_option_irs_status = gsub("[^a-zA-Z0-9 -]", "", agency_option_irs_status)
+  )
+```
+
+### service
+```{r}
+service <- uw_service %>%
+  select(agency_id, service_id, service_site_service_site, service_system_name, 
+         service_system_aka, service_system_description, 
+         service_system_coverage_area_text, service_system_fee_structure, 
+         service_custom_eligibility, service_custom_languages_offered, 
+         (contains("option") & !(contains("record_owner") | contains("days"))), 
+         service_status
+         ) %>%
+  rowwise() %>%
+  # Separate the site IDs
+  mutate(
+    site_id = paste(str_extract_all(service_site_service_site, "[0-9]+", simplify = TRUE), 
+                        collapse = ", "),
+    site_id = case_when(
+      site_id == "NA" ~ NA,
+      site_id == ""   ~ NA,
+      TRUE            ~ site_id
+    )
+  ) %>% 
+  relocate(site_id, .after = "service_site_service_site") %>%
+  # Create individual rows for each site_id
+  tidyr::separate_longer_delim(site_id, delim = ", ") %>%
+  # Remove "system" from column names
+  rename_with(~gsub("_system", "", .),
+              everything()) %>% 
+  # Filter out inactive
+  filter(
+    !str_detect(service_option_status, regex("inactive", ignore_case = TRUE))
+    ) %>%
+  filter(
+    !str_detect(service_name, regex("inactive", ignore_case = TRUE))
+    )
+```
+
+### site
+```{r}
+site <- uw_site %>% 
+  select(site_id, site_system_name, contains("aka"), 
+         contains("description"), contains("websiteurl"), (contains("address") & 
+                                    (matches("_[0-9]") | contains("_city") |
+                                       contains("_county") | contains("_state")|
+                                       contains("_zip") | contains("_country") |
+                                       contains("_notes") | contains("itude")) &
+                                    !(matches("international") | 
+                                        matches("mailing"))),
+         contains("_ada_acccess")
+                               ) %>%
+  # Rename columns to remove "agency_addressus" prefix
+  rename_with(~gsub("^(site_addressus_)", "", .),
+              everything())%>%
+  # Remove "system" from column names
+  rename_with(~gsub("_system", "", .),
+              everything())  
+```
+
+## Merge the datasets
+#### Filter services with site IDs
+```{r}
+has_site_id <- service %>% filter(!is.na(site_id))
+```
+
+```{r}
+uw_data_site_id <- agency %>% filter(agency_id %in% has_site_id$agency_id) %>% 
+  right_join(has_site_id, by = "agency_id") %>% 
+  left_join(site, by = "site_id")
+```
+
+#### Filter services without site IDs and merge with agency data
+```{r}
+no_site_id <- service %>% filter(is.na(site_id))
+
+no_site_id <-  agency %>% filter(agency_id %in% no_site_id$agency_id) %>% right_join(no_site_id, by = "agency_id")
+
+```
+
+```{r}
+uw_data <- bind_rows(uw_data_site_id, no_site_id)
+```
+
+## Classify the programs
+### Aggregate lines for each agency
+
+```{r}
+uw_data_select <- uw_data %>% 
+  select(agency_id, service_id, site_id, agency_name,  agency_aka, 
+         agency_description, service_name, service_aka, zip,
+         service_description
+         ) %>% distinct()
+```
+
+```{r}
+uw_data_c <- uw_data_select %>% 
+  group_by(service_id) %>%
+  # Combine row values in a group
+  mutate(
+    across(
+      .cols = c(agency_name, #agency_description, 
+                service_name, service_aka,
+         service_description),
+      .fns = ~as.list(str_split(paste(.x, collapse = ",", sep = ""), ",")[1])
+    )
+  ) %>% distinct() %>%
+  # Convert lists in each row  to strings
+  mutate(
+    across(
+      .cols = c(agency_name, #agency_description, 
+                service_name, service_aka,
+         service_description),
+      .fns = ~list(unique(unlist(.x)))        
+    )
+  ) %>% 
+  rowwise() %>% 
+  # Convert lists in each row  to strings
+  mutate(
+    across(
+      .cols = c(agency_name, #agency_description, 
+                service_name, service_aka,
+         service_description),
+      .fns = ~paste(unlist(.x), collapse = " ")        
+    )
+  ) %>%
+  mutate(
+   agency_id,
+    c_text = paste(unlist(agency_name), # unlist(agency_description),
+                   unlist(service_name), unlist(service_aka), unlist(service_description),
+                   collapse = " ")
+    ) %>% 
+  ungroup() %>%
+  select(agency_id, service_id, site_id, agency_name, service_name, c_text) %>% distinct() 
+```
+
+### Create columns for keyword match counts
+```{r}
+# mil_keywords, wm_keywords, child_keywords,
+# dis_keywords, ani_keywords, imm_keywords, eld_keywords, dabi_keywords
+
+uw_data_classify <- uw_data_c %>% rowwise() %>%
+  mutate(
+    bhs_count = match_count(bhs_keywords, c_text),
+    sut_count = match_count(sut_keywords, c_text),
+    ha_count = match_count(ha_keywords, c_text),
+    hcs_count = match_count(hcs_keywords, c_text),
+    cpi_count = match_count(cpi_keywords, c_text),
+    laa_count = match_count(laa_keywords, c_text),
+    lds_count = match_count(lds_keywords, c_text),
+    res_count = match_count(res_keywords, c_text),
+    cea_count = match_count(cea_keywords, c_text),
+    inc_count = match_count(inc_keywords, c_text),
+    fa_count = match_count(fa_keywords, c_text),
+    mil_count = match_count(mil_keywords, c_text),
+    wm_count = match_count(wm_keywords, c_text),
+    child_count = match_count(child_keywords, c_text),
+    dis_count = match_count(dis_keywords, c_text),
+    ani_count = match_count(ani_keywords, c_text),
+    imm_count = match_count(imm_keywords, c_text),
+    eld_count = match_count(eld_keywords, c_text),
+    dabi_count = match_count(dabi_keywords, c_text),
+    bn_count = match_count(bn_keywords, c_text)
+  ) %>%
+  mutate(
+    across(
+      .cols = c(ends_with("count")),
+      .fns = ~ case_when(
+        .x == 0         ~ "Not likely",
+        .x == 1         ~ "Possibly",
+        .x > 1          ~ "Likely"
+        ),
+      .names = "{col}_likelihood"
+    )
+  ) %>% 
+  rename_with(
+    ~gsub("_count", "", .),
+              ends_with("likelihood")
+  ) %>% 
+  # Count keyword matches only within agency names
+  mutate(
+    a_name_bhs_count = match_count(bhs_keywords, agency_name),
+    a_name_sut_count = match_count(sut_keywords, agency_name),
+    a_name_ha_count = match_count(ha_keywords, agency_name),
+    a_name_hcs_count = match_count(hcs_keywords, agency_name),
+    a_name_cpi_count = match_count(cpi_keywords, agency_name),
+    a_name_laa_count = match_count(laa_keywords, agency_name),
+    a_name_lds_count = match_count(lds_keywords, agency_name),
+    a_name_res_count = match_count(res_keywords, agency_name),
+    a_name_cea_count = match_count(cea_keywords, agency_name),
+    a_name_inc_count = match_count(inc_keywords, agency_name),
+    a_name_fa_count = match_count(fa_keywords, agency_name),
+    a_name_mil_count = match_count(mil_keywords, agency_name),
+    a_name_wm_count = match_count(wm_keywords, agency_name),
+    a_name_child_count = match_count(child_keywords, agency_name),
+    a_name_dis_count = match_count(dis_keywords, agency_name),
+    a_name_ani_count = match_count(ani_keywords, agency_name),
+    a_name_imm_count = match_count(imm_keywords, agency_name),
+    a_name_eld_count = match_count(eld_keywords, agency_name),
+    a_name_dabi_count = match_count(dabi_keywords, agency_name),
+    a_name_bn_count = match_count(bn_keywords, agency_name)
+  ) %>%
+  select(sort(names(.)))
+```
+
+# Load data filtered by Reyda
+Reyda filtered out data. She removed agency IDs with counties outside Travis county as well as resources that appear to be niche population e.g child services, casa, emergency response, senior care, newspapers, event centers, cultural centers etc 
+```{r}
+# RT Filtered United Way Data
+rt_uw_class <- readxl::read_xlsx(
+  here::here("data", "uw_class_data_rt.xlsx"),
+  sheet = "sorted_filtered") %>%
+  clean_names() %>% remove_empty("cols")
+```
+
+```{r}
+rt_uw_cl <- uw_data_classify %>% 
+  # Filter agency IDs in Reyda's list
+  filter(agency_id %in% rt_uw_class$agency_id)
+```
+
+
+```{r}
+# Filter cases where at least one agency name categorical variable is > 0
+rt_a_name_cat <-  rt_uw_cl %>% 
+  filter(if_any(
+  .cols = starts_with("a_name_"), 
+  .fns = ~.x > 0)) %>%
+  mutate(
+    bhs_cat = case_when(bhs_count > 2 | a_name_bhs_count != 0 ~ "Behavioral Health Services",
+                        TRUE                         ~ NA), 
+    sut_cat = case_when(sut_count > 2 | a_name_sut_count != 0 ~ "Substance Use Treatment",
+                        TRUE                         ~ NA), 
+    ha_cat = case_when(ha_count > 2 | a_name_ha_count != 0 ~ "Housing Assistance",
+                       TRUE                         ~ NA),
+    hcs_cat = case_when(hcs_count > 2 | a_name_hcs_count != 0 ~ "Healthcare Services",
+                       TRUE                         ~ NA),
+    cpi_cat = case_when(cpi_count > 2 | a_name_cpi_count != 0 ~ "Community Policing Initiatives",
+                        TRUE                         ~ NA),
+    laa_cat = case_when(laa_count > 2 | a_name_laa_count != 0 & 
+                          (inc_likelihood == "Likely" | 
+                             inc_likelihood == "Possibly") ~ "Legal Aid and Advocacy",
+    TRUE                         ~ NA),
+    lds_cat = case_when(lds_count > 2 | a_name_lds_count != 0 ~ "Legal Diversion Services",
+                        TRUE    ~ NA),
+    res_cat = case_when((res_count > 2 | a_name_res_count != 0) |
+                          (fa_count > 2 | a_name_fa_count != 0) |
+                          (bn_count > 2 | a_name_bn_count != 0) ~ "Reentry Support",
+                        TRUE ~ NA),
+    cea_cat = case_when(cea_count > 2 | a_name_cea_count != 0 & 
+                          (inc_count > 2) ~ "Community Engagement and Awareness",
+                        TRUE ~ NA) 
+  ) %>% unite(col =  "main_categories",
+              ends_with("_cat"),
+              sep = ", ",
+              na.rm = TRUE) %>%
+  relocate(c_text, .after = "agency_name")
+```
+
+```{r}
+# Account for categories that don't make sense without incarcerated and add column that has all categories in a list.
+rt_uw_cat <- rt_uw_cl %>% 
+  # Filter agency IDs not in Reyda's list
+  filter(!(agency_id %in% rt_a_name_cat$agency_id)) %>%
+  mutate(
+    bhs_cat = case_when(bhs_likelihood == "Likely" ~ "Behavioral Health Services",
+                        TRUE                         ~ NA), 
+    sut_cat = case_when(sut_likelihood == "Likely" ~ "Substance Use Treatment",
+                        TRUE                         ~ NA), 
+    ha_cat = case_when(ha_likelihood == "Likely" ~ "Housing Assistance",
+                       TRUE                         ~ NA),
+    hcs_cat = case_when(hcs_likelihood == "Likely" ~ "Healthcare Services",
+                       TRUE                         ~ NA),
+    cpi_cat = case_when(cpi_likelihood == "Likely" ~ "Community Policing Initiatives",
+                        TRUE                         ~ NA),
+    laa_cat = case_when((laa_likelihood == "Possibly" | 
+                          laa_likelihood == "Likely") & 
+                          (inc_likelihood == "Likely" | 
+                             inc_likelihood == "Possibly") ~ "Legal Aid and Advocacy",
+    TRUE                         ~ NA),
+    lds_cat = case_when(lds_likelihood == "Possibly" | 
+                          lds_likelihood == "Likely" ~ "Legal Diversion Services",
+                        TRUE    ~ NA),
+    res_cat = case_when((res_likelihood == "Possibly" | 
+                          res_likelihood == "Likely" | fa_likelihood == "Likely" |
+                          bn_likelihood == "Likely") ~ "Reentry Support",
+                        TRUE ~ NA),
+    cea_cat = case_when((cea_likelihood == "Possibly" | 
+                          cea_likelihood == "Likely") & 
+                            (inc_likelihood == "Likely" | inc_likelihood == "Possibly") ~ 
+      "Community Engagement and Awareness",
+      TRUE ~ NA) 
+  ) %>% unite(col =  "main_categories",
+              ends_with("_cat"),
+              sep = ", ",
+              na.rm = TRUE) %>%
+  relocate(c_text, .after = "agency_name")
+
+```
+
+```{r}
+combine_results <- rbind(rt_a_name_cat, rt_uw_cat) %>% select(c(agency_id, service_id, 
+                                                          site_id, agency_name, 
+                                                          service_name, 
+                                                          ends_with("_cat"), 
+                                                          main_categories)) %>% 
+  distinct()
+```
+
+```{r}
+final_cat <- uw_data %>% select(c(site_id, service_id, agency_description, site_addressus_zip,
+         service_description)) %>% distinct() %>% right_join(combine_results, by = c("service_id", "site_id")) %>% distinct()
+
+final_cat %>% select(service_name) %>% distinct() %>% nrow()
+```
+
+```{r}
+test <- c()
+for (i in bhs_keywords){
+  t <- str_match(uw_data_classify$c_text[108], i)
+  test <- append(test, t)
+}
+
+test
+
+```
+
+
+# Adjust thresholds for blank categories
+
+```{r}
+check_list <- final_cat %>% group_by(agency_id) %>%
+  filter(main_categories == "") %>%
+  ungroup()
+
+check_list_key <- check_list %>% select(service_id, site_id)
+  
+check <- uw_data_classify %>% right_join(check_list_key, by = c("service_id", "site_id")) %>%
+  mutate(
+    bhs_cat = case_when(bhs_count > 1 ~ "Behavioral Health Services",
+                        TRUE                         ~ NA), 
+    sut_cat = case_when(sut_count > 1 ~ "Substance Use Treatment",
+                        TRUE                         ~ NA), 
+    ha_cat = case_when(ha_count > 1 ~ "Housing Assistance",
+                       TRUE                         ~ NA),
+    hcs_cat = case_when(hcs_count > 1 ~ "Healthcare Services",
+                       TRUE                         ~ NA),
+    cpi_cat = case_when(cpi_count > 1 ~ "Community Policing Initiatives",
+                        TRUE                         ~ NA),
+    laa_cat = case_when((laa_count > 1) & 
+                          (inc_count > 1) ~ "Legal Aid and Advocacy",
+    TRUE                         ~ NA),
+    lds_cat = case_when(lds_count > 1 ~ "Legal Diversion Services",
+                        TRUE    ~ NA),
+    res_cat = case_when((res_count  > 1 | fa_count > 1 |
+                          bn_count > 1) ~ "Reentry Support",
+                        TRUE ~ NA),
+    cea_cat = case_when((cea_count > 1) & 
+                            (inc_count > 1) ~ 
+      "Community Engagement and Awareness",
+      TRUE ~ NA) 
+  ) %>% unite(col =  "main_categories",
+              ends_with("_cat"),
+              sep = ", ",
+              na.rm = TRUE) %>%
+  relocate(c_text, .after = "agency_name") %>% 
+  select(agency_id, service_id, site_id, agency_name, service_name, main_categories)
+```
+
+```{r}
+checked <- readxl::read_xlsx(here::here("data", "check_united_way_data.xlsx")) %>%
+  select(site_id, service_id, main_categories)
+```
+
+## Combine manually filled categories to remaining data
+```{r}
+final_cat_no_manual <- check_list <- final_cat %>% group_by(agency_id) %>%
+  filter(!main_categories == "") %>%
+  ungroup()
+```
+
+```{r}
+checked_full <- check_list %>% select(-c(main_categories)) %>%
+  right_join(checked, by = c("site_id", "service_id"))
+```
+
+Note: Some rows containing less relevant resources were removed during manual review.
+```{r}
+final_cat_main <- rbind(final_cat_no_manual, checked_full) %>%
+# Remove irrelevant immigrant resources
+filter(!grepl("38948|42055", service_id)) %>%
+   tidyr::separate_longer_delim(main_categories, delim = ", ")
+id <- c(1:nrow(final_cat_main))
+
+final_cat_main <- cbind(id, final_cat_main)
+```
+
+### Identify Services with missing zip code data
+```{r}
+final_cat_no_zip <- final_cat_main %>% filter(is.na(site_addressus_zip))
+```
+
+### Filter only services with zip code data
+```{r}
+final_cat_zip <- final_cat_main %>% filter(!is.na(site_addressus_zip))
+```
+
+### Data with and without zipcode combined
+
+```{r}
+writexl::write_xlsx(final_cat_main, here::here("data", "uw_categorized_main_category.xlsx"))
+```
+ 
+# Sub category classification
+## Behavioral Health Services
+```{r}
+bhs_main <- final_cat_main %>% filter(main_categories == "Behavioral Health Services") %>%
+  ungroup() %>%
+  group_by(service_id) %>%
+  # Combine row values in a group
+  mutate(
+    across(
+      .cols = c(service_name, service_description),
+      .fns = ~as.list(str_split(paste(.x, collapse = ",", sep = ""), ",")[1])
+    )
+  ) %>% distinct() %>%
+  # Convert lists in each row  to strings
+  mutate(
+    across(
+      .cols = c(service_name, service_description),
+      .fns = ~list(unique(unlist(.x)))        
+    )
+  ) %>% 
+  rowwise() %>% 
+  # Convert lists in each row  to strings
+  mutate(
+    across(
+      .cols = c(service_name, service_description),
+      .fns = ~paste(unlist(.x), collapse = " ")        
+    )
+  ) %>%
+  mutate(
+   agency_id,
+    c_text = paste(unlist(service_name), unlist(service_description),
+                   collapse = " ")
+    ) %>% 
+  # ungroup() %>% distinct() %>%
+  mutate(
+    cip_count = match_count(crisis_keywords, c_text),
+    emc_count = match_count(emergency_keywords, c_text),
+    res_count = match_count(res_keywords, c_text),
+    out_count = match_count(outpatient_keywords, c_text),
+    inp_count = match_count(inpatient_keywords, c_text),
+    pwi_count = match_count(inc_keywords, c_text)
+  ) %>%
+  mutate(
+    cip_cat = case_when(
+      cip_count > 0 ~ "Crisis Intervention Programs"
+    ),
+    emc_cat = case_when(
+      emc_count > 0 ~ "Emergency"
+    ), 
+      res_cat = case_when(
+        res_count > 0 ~ "Residential Facilities"
+    ),
+      out_cat = case_when(
+        out_count > 0 ~ "Outpatient"
+    ),
+      inp_cat = case_when(
+        inp_count > 0 ~ "Inpatient"
+    ),
+      pwi_cat = case_when(
+        pwi_count > 0 ~ "Programs while Incarcerated"
+    )
+  ) %>% filter(!service_name == "Pediatric and Adult Rehabilitation Services") %>%
+                 filter(!is.na(agency_name))
+```
+
+
+## Substance Use Treatment
+```{r}
+sut_main <- final_cat_main %>% filter(main_categories == "Substance Use Treatment") %>%
+  ungroup() %>%
+  group_by(service_id) %>%
+  # Combine row values in a group
+  mutate(
+    across(
+      .cols = c(service_name, service_description),
+      .fns = ~as.list(str_split(paste(.x, collapse = ",", sep = ""), ",")[1])
+    )
+  ) %>% distinct() %>%
+  # Convert lists in each row  to strings
+  mutate(
+    across(
+      .cols = c(service_name, service_description),
+      .fns = ~list(unique(unlist(.x)))        
+    )
+  ) %>% 
+  rowwise() %>% 
+  # Convert lists in each row  to strings
+  mutate(
+    across(
+      .cols = c(service_name, service_description),
+      .fns = ~paste(unlist(.x), collapse = " ")        
+    )
+  ) %>%
+  mutate(
+   agency_id,
+    c_text = paste(unlist(service_name), unlist(service_description),
+                   collapse = " ")
+    ) %>% 
+  # ungroup() %>% distinct() %>%
+  mutate(
+    hrm_count = match_count(harm_reduction_keywords, c_text),
+    out_count = match_count(outpatient_keywords, c_text) + 
+      str_count(c_text, "residential"),
+    inp_count = match_count(inpatient_keywords, c_text),
+    sup_count = match_count(support_group_keywords, c_text)
+  ) %>%
+  mutate(
+    hrm_cat = case_when(
+      hrm_count > 0 ~ "Harm Reduction Services"
+    ),
+    out_cat = case_when(
+      out_count > 0 ~ "Outpatient Treatment Programs"
+    ), 
+      inp_cat = case_when(
+        inp_count > 0 ~ "Inpatient Rehabilitation Centers"
+    ),
+      sup_cat = case_when(
+        sup_count > 0 ~ "Support Groups"
+    )
+  ) %>% 
+  filter(!agency_name == "ARCIL  Inc.") %>%
+   filter(!service_name == "Housing Services") %>%
+   filter(!service_name == "Pediatric and Adult Rehabilitation Services") %>% 
+   filter(!grepl("work|training|employment| prescription", 
+                 service_name, ignore.case = TRUE)) %>%
+filter(!agency_name == "In The Streets-Hands Up High Ministry")
+ 
+```
+
+
+```{r}
+writexl::write_xlsx(bhs_main, here::here("data", "uw_categorized_behavioral_services.xlsx"))
+```
+
+```{r}
+writexl::write_xlsx(bhs_main, here::here("data", "uw_categorized_substance_abuse_treatment.xlsx"))
+```

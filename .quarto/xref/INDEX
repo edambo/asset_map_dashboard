@@ -34,5 +34,27 @@
   },
   "sections/demographics_tables.qmd": {
     "demographics_tables.html": "9936d5d8"
+  },
+  "sections/definitions.qmd": {
+    "definitions.html": "569b987f"
+  },
+  "data_cleaning/classification_lists.qmd": {
+    "classification_lists.html": "71ab9eb0",
+    "classification_lists.docx": "28e2642e"
+  },
+  "data_cleaning/data_cleaning_asset_map.qmd": {
+    "data_cleaning_asset_map.html": "48a67f73"
+  },
+  "data_cleaning/data_cleaning_united_data.qmd": {
+    "data_cleaning_united_data.html": "4544f796"
+  },
+  "data_cleaning/intercept_classification list.qmd": {
+    "intercept_classification list.html": "8828e451"
+  },
+  "data_cleaning/main_category_classification_lists.qmd": {
+    "main_category_classification_lists.docx": "70d909e0"
+  },
+  "data_cleaning/sub_category_classification_lists.qmd": {
+    "sub_category_classification_lists.docx": "9e0d01cf"
   }
 }

@@ -61,7 +61,7 @@ Placeholder
 ```{r, echo = FALSE, out.width="50%"}
 ggplot(demographic_sum, aes(x = category, y = count, fill = have_category)) +
   geom_bar(stat = "identity", color = "grey") +
-  scale_fill_manual("legend", labels = c("Programs without category", "Programs with category"), values = c("no" = "transparent", "yes" = "cyan"))+
+  scale_fill_manual("legend", labels = c("Program demographics do not include category", "Program demographics include category"), values = c("no" = "transparent", "yes" = "#00FFFF"))+
   geom_text(aes(label = count), size = 2, position = position_stack(vjust = 0.5)) +
   theme_classic() + 
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),

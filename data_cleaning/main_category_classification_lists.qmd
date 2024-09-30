@@ -1,0 +1,362 @@
+---
+format: docx
+---
+
+## Behavioral Health Services
+```{r}
+bhs_keywords <- c(
+  "mental disorder", " psychiatric",
+  " therapy", " emotional health", " stabilization", "crisis hotline",
+  " respite", "depression", " anxiety", 
+  " behavioral health",
+  " mental health", " anger management",
+  " behavioral disorders",
+  "psychiatric conditions",
+  "counseling and therapy",
+  " mental illness", " psychologist", "neurodivergen"
+)
+```
+
+## Substance Use Treatment
+```{r}
+sut_keywords <- c(
+  " substance", "addiction", "drugs", "alcohol", "sobriety", "dependence",
+  "rehabilitation", "detox", "narcotics", "overdose", "rehab", "drug addiction",
+  "substance use", "addict",
+  "substance abuse", "drinking",
+  "harm reduction",
+  "inpatient rehabilitation centers",
+  "needle exchange",
+  "supervised consumption",
+  "alcoholics anonymous", "marijuana", "cocaine", "heroin", "methamphetamine", 
+  "mdma", "cannabis", "nicotine", "opiod", "sober"
+)
+```
+
+## Housing Assistance
+```{r}
+ha_keywords <- c(
+  " housing", "shelters","homeless", "boarding", " homes", " rehousing",
+  "unhoused", "accommodation",
+  "housing assistance",
+  "stable housing",
+  "housing solutions",
+  "emergency shelters",
+  "supportive housing options",
+  "housing instability",
+  "transitional housing",
+  "temporary housing",
+  "permanent housing",
+  "boarding homes",
+  "long-term housing",
+  "daily living",
+  "emergency homeless shelters",
+  "short-term accommodations",
+  "affordable housing",
+  "low-income residents"
+)
+```
+
+## Healthcare Services
+```{r}
+hcs_keywords <- c(
+  "healthcare", "medical", "medicine",
+  "clinic", "hospital", "medication", "physician", "doctor",
+  "injuries", "surgeries", "prescription",
+  "healthcare services",
+  "primary care",
+  "hospital",
+  "health education",
+  "medical treatment",
+  "primary healthcare",
+  "medical facilities", "nurse",
+  "preventive care",
+  "disease prevention",
+  "healthy lifestyle", "physical therapy", "occupational therapy",
+  "speech therapy"
+)
+```
+
+## Community Policing Initiatives
+```{r}
+cpi_keywords <- c(
+  "community policing",
+  "law enforcement",
+  "public safety",
+  "police officers",
+  "community policing training",
+  "law enforcement",
+  "educate officers",
+  " patrol", 
+  "neighborhood watch",
+  "crime prevention",
+  "police-community relations",
+  "law enforcement outreach",
+  "police partnership",
+  "community safety programs",
+  "crime reporting",
+  "police visibility",
+  "local policing"
+)
+```
+
+## Legal Aid Advocacy
+```{r}
+laa_keywords <- c(
+  "legal", "representation",
+  "attorney", "defender", "represent", "case", "law", "lawyer", "rights",
+  "legal aid and advocacy",
+  "legal support",
+  "legal advice",
+  "justice reform",
+  "legal advocacy",
+  "legal advocate",
+  "justice",
+  "legal issues",
+  "public defender",
+  "criminal case",
+  "legal aid organizations",
+  "legal assistance",
+  "policy advocacy",
+  "legal reform",
+  "criminal defense",
+  "legal help"
+)
+```
+
+## Legal Diversion Supports
+```{r}
+lds_keywords <- c(
+  "legal diversion supports",
+  "pretrial",
+  "diversion",
+  "criminal diversion",
+  "legal diversion",
+  "pretrial diversion",
+  "pretrial supervision",
+  "risk assessment",
+  "specialty court",
+  "reduce incarceration",
+  "pretrial supervision",
+  "oversight and support",
+  "awaiting trial",
+  "monitoring and compliance",
+  "evaluating risk",
+  "drug court",
+  "mental health court",
+  "special court", "court"
+)
+
+```
+
+## Re-entry Support
+```{r}
+# add incarceration keywords to this
+
+res_keywords <- c(
+  "reentry", "transitioning", "family support",
+  "job", " loan", "financial need", "utility bill",
+  "reentry support",
+  "employment",
+  "housing", "utilities",
+  "education",
+  "social integration",
+  "reintegrate",
+  "re-entry",
+  "vocation",
+  "job training",
+  "training",
+  "workforce",
+  "vocational rehabilitation",
+  "disabilities",
+  "accommodations",
+  "stable housing",
+  "skill development",
+  "adult education",
+  "literacy",
+  "GED",
+  "family support",
+  "social support",
+  "family counseling",
+  "supportive social networks",
+  "community groups",
+  "social support",
+  "childcare", "baby",
+  "transportation",
+  "public transport",
+  "public transit",
+  "bus",
+  "trains",
+  "essential services", "secondhand", "thrift store",
+  "computer", "writing", "reading", "printer", "tax", "internet",
+  "adult education"
+)
+```
+
+## Community Engagement and Awareness
+```{r}
+cea_keywords <- c(
+  "community engagement", "awareness", "forums", "participation", 
+  "partnerships", "community contribution", "public participation",
+  "community engagement and awareness", "stakeholder engagement",
+  "local issues", "community leader", "local partnership",
+  "outreach programs", "community participation",
+  "public meetings", "grassroots",
+  "raise awareness", "awareness campaign"
+)
+```
+
+## Incarcerated
+```{r}
+inc_keywords <- c("incarcerated", 
+                              "imprisoned",
+                              "misdemeanor",
+                              "jail",
+                              "detained",
+                              "behind bars",
+                              "incarceration",
+                              "convict",
+                              "remanded",
+                              "put away",
+                              "interned",
+                              "prison",
+                              "penitentiary",
+                              "correctional",
+                              "reform",
+                              "justice system",
+                              "sentence",
+                              "criminal",
+                              "offender",
+                              "felon",
+                  "court-mandated"
+                            )
+```
+
+## Food Assistance
+```{r}
+fa_keywords <- c(
+    "food assistance",
+    "food aid",
+    "nutritional support",
+    "food program", "fruits",
+    "food distribution",
+    "food bank",
+    "meal program",
+    "emergency food services",
+    "food voucher", "vegetables",
+    "food stamps",
+    "community kitchen",
+    "pantry services",
+    "grocery assistance",
+    "meal delivery",
+    "food relief",
+    "food security",
+    "hunger relief",
+    "food recovery",
+    "nutrition programs", "kitchen",
+    "food subsidies", 
+    "food", "nutrition", "meal", "pantry", "grocery", "hunger"
+)
+```
+
+## Military
+```{r}
+mil_keywords <- c("army", "veteran", "military", "navy", "air force")
+```
+
+## Women and Motherhood
+```{r}
+wm_keywords <- c("maternal", "women", "childbirth", "birth", "prenatal",
+                 "diaper", "infant", "nursing", "maternal health", "maternity",
+                 "women's health", "postpartum")
+```
+
+## Children and Youth
+```{r}
+child_keywords <- c(
+  "children", "youth", "kid", "adolescent", "early learning",
+  "junior", "teen", "kindergarten", "school disctict", 
+  "afterschool", "school", "boy", "girl", "child"
+)
+```
+
+## Chronic Disease/ Disorder
+```{r}
+dis_keywords <- c("heart disease", "diabetes", "liver", "cancer", 
+                "sexually transmitted disease", "sexually transmitted infection", 
+                "std", "alzheimer", "chronic disease", "hiv", "cleft", "affected",
+                "screening", "support")
+```
+
+## Animals
+```{r}
+ani_keywords <- c(
+  "animal protection", "veterinarian", "pets", 
+  "wildlife protection", "humane", "domesticated", " pet ", "neuter", "spay",
+  "animal health"
+)
+```
+
+
+## Immigrants
+```{r}
+imm_keywords <- c("immigration", "refugee", "asylum", "immigrant")
+```
+
+## Elderly
+```{r}
+eld_keywords <-  c("elder", "senior citizen", "older adult", "senior", "aged",
+                   "geriatric", "retire")
+```
+
+## Disability
+```{r}
+dabi_keywords <-  c(
+  "disability", "autism", "asperger", "disabled", " ada ", 
+  "special needs", "impaired", "impairment", "blind", "deaf", "wheelchair",
+  "accessibility", "differently-abled"
+)
+```
+
+## Disaster Relief
+```{r}
+dr_keywords <- c(
+  "natural disaster", "earthquake", "hurricane", 
+  "tornado", "flood", "wildfire", "tsunami", "volcano", 
+  "landslide", "drought", "severe weather", "evacuation", 
+  "disaster relief", "crisis management",
+  "rescue operations", "disaster recovery", "preparedness",
+  "disaster"
+)
+```
+
+## Negating phrases
+```{r}
+neg_keywords <- c(
+  " no", "not assist with", "not serve", "not help", "not provide", "not offer",
+  "not supply", "not help with"
+)
+```
+
+## Basic Needs
+```{r}
+bn_keywords <- c(
+  "food", "clothing", "clothes", "shoes", "meal", "grocery", "groceries", 
+  "shower", "hygiene", "garment" 
+)
+```
+
+# Save data
+```{r}
+path <- here::here("data", "keyword_lists.RData")
+save(bhs_keywords, sut_keywords, ha_keywords, hcs_keywords, cpi_keywords, 
+     laa_keywords, lds_keywords, res_keywords, cea_keywords,
+     fa_keywords, inc_keywords, mil_keywords, wm_keywords, child_keywords,
+     dis_keywords, ani_keywords, imm_keywords, eld_keywords, dabi_keywords,
+     neg_keywords, bn_keywords,
+     file = path)
+```
+
+```{r}
+rm(list = ls())
+```

@@ -203,7 +203,7 @@ bscols(widths = c(12),
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the all need categories.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html) to see the definitions for the categories used in classifying the data.
 
 The data can be filtered by zipcode, sub-category, or intercept category and downloaded in either CSV or Excel format.
 :::
@@ -272,7 +272,7 @@ bscols(widths = c(12),
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the behavioral health need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#behavioral-health-services) to see the definitions for the categories used in classifying the data.
 
 The data can be filtered by zip code, sub-category, or intercept category.
 
@@ -325,7 +325,7 @@ bscols(widths = c(12),
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the substance use treatment need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#substance-use-treatment) to see the definitions for the categories used in classifying the data.
 
 The data can be filtered by zip code, sub-category, or intercept category.
 
@@ -379,7 +379,7 @@ bscols(widths = c(12),
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the housing assistance need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#housing-assistance) to see the definitions for the categories used in classifying the data.
 
 The data can be filtered by zip code, sub-category, or intercept category.
 
@@ -403,7 +403,7 @@ shared_data_hcs <- SharedData$new(hcs, key = ~program)
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the healthcare services need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#healthcare-services) to see the definitions for the categories used in classifying the data.
 
 There is currently no data to display for this need category.
 :::
@@ -417,7 +417,7 @@ shared_data_cpi <- SharedData$new(cpi, key = ~program)
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the community policing intiative need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#community-policing-initiatives) to see the definitions for the categories used in classifying the data.
 
 There is currently no data to display for this need category.
 :::
@@ -459,7 +459,7 @@ bscols(widths = c(12),
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the legal aid & advocacy need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#legal-aid-and-advocacy) to see the definitions for the categories used in classifying the data.
 
 The data can be filtered by zip code, sub-category, or intercept category.
 
@@ -513,7 +513,7 @@ bscols(widths = c(12),
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the legal diversion supports need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#legal-diversion-supports) to see the definitions for the categories used in classifying the data.
 
 The data can be filtered by zip code, sub-category, or intercept category.
 
@@ -567,7 +567,7 @@ bscols(widths = c(12),
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the re-entry support need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#reentry-support) to see the definitions for the categories used in classifying the data.
 
 The data can be filtered by zip code, sub-category, or intercept category.
 
@@ -593,7 +593,7 @@ shared_data_cea <- SharedData$new(cea, key = ~program)
 ::: {.card title="Notes for Dashboard Use"}
 This dashboard visualizes data for the community engagement and awareness need category.
 
-Follow this link to see the definitions for the categories used in classifying the data.
+Follow this [link](definitions.html#community-engagement-and-awareness) to see the definitions for the categories used in classifying the data.
 
 There is currently no data to display for this need category.
 :::

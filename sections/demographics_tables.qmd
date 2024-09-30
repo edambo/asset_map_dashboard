@@ -1,3 +1,6 @@
+---
+toc: true
+---
 # Tables
 Below are demographic values for each program.
 

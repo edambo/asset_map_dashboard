@@ -1,0 +1,270 @@
+---
+format: docx
+---
+
+## Outpatient
+```{r}
+outpatient_keywords <- c("outpatient", "non-residential", "external patient", "day patient",
+                         "counseling", "group therapy", "clinic", "consultation",
+                         "psychiatric evaluation", "appointment", "consultation", "virtual",
+                         "client's home", "telehealth", "referral", "support group", "screen",
+                         "helpline", "text", "day center", "hour")
+```
+
+## Inpatient Facilities
+```{r}
+inpatient_keywords <- c("inpatient", "extended hospitalization",
+                        "hospitaliz", "overnight", "admitted", "surger", 
+                        "residential")
+```
+
+## Residential Facilities
+```{r}
+res_keywords <- c("treatment homes", "residential")
+```
+
+## Crisis Intervention
+
+```{r}
+crisis_keywords <- c("crisis")
+```
+
+## Emergency
+
+```{r}
+emergency_keywords <- c("emergency")
+```
+
+## Harm Reduction Services
+```{r}
+harm_reduction_keywords <- c("harm reduction", "needle exchange", 
+                             "supervised consumption", "naloxone", "safer use")
+```
+
+## Support Groups
+```{r}
+support_group_keywords <-  c("support group", "anonymous", "peer", "group")
+```
+
+## Transitional Housing Programs
+```{r}
+trans_hous_keywords <- c("transitional housing", "temporary housing", 
+                         "temporary shelter", "supportive housing", 
+                         "transitional shelter")
+```
+
+## Boarding Homes
+```{r}
+boarding_homes <- c("boarding home" )
+```
+
+## Emergency Homeless Shelters
+```{r}
+emergency_homeless_keywords <- c("emergency housing", "emergency accommodation",
+                                 "crisis shelter", "rescue shelter", 
+                                 "urgent shelter", "urgent housing", "homeless")
+```
+
+## Rapid Rehousing 
+```{r}
+rapid_rehousing_keywords <- c("rapid rehousing", "homeless")
+```
+
+## Supportive Housing Programs
+```{r}
+supportive_housing_keywords <- c("supportive housing", 
+                                 "service-enriched housing", 
+                                 "supportive living")
+```
+
+## County-Funded “Affordable Housing” Programs
+```{r}
+county_funded_housing_keywords <- c("government", "subsidized", "county-funded",
+                                    "affordable housing", "publicly funded",
+                                    "county funded")
+```
+
+## Primary Healthcare Clinic
+```{r}
+primary_hcs_keywords <- c("routine", "check-ups", "preventive care", "common illness",
+                 "common injuries", "primary care", "general", "preventive")
+```
+
+## Health Education Programs
+```{r}
+health_edu_keywords <- c("health education", "health awareness", 
+                         "welness education", "health training", 
+                         "health literacy", "health coaching", 
+                         "nutritional education")
+```
+
+## Access to Medication and Medical Treatment
+```{r}
+medical_access_keywords <-  c("prescription assistance", "drug access",
+                              "affordable health", "volunteer clinic",
+                              "patient support services", "low cost clinic",
+                              "community health clinic", "free clinic")
+```
+
+## Programs that Build Positive Relationships Between Law Enforcement and the Community
+```{r}
+law_community_keywords <- c("community policing", "community partnership",
+                            "trust-building", "community outreach", 
+                            "neighborhood watch", "neighborhood outreach",
+                            "transparency initiatives", ""
+                            )
+```
+
+## Community Policing Training for Law Enforcement Officers
+```{r}
+police_training <- c("active listening", "diversity training", 
+                     "conflict resolution", "ethical policing", "de-escalation",
+                     "cultural competency")
+```
+
+## Public Defenders
+```{r}
+pub_def_keywords <- c("public defender", "defensive counsel", 
+                      "legal aid atorney", "defense lawyer", 
+                      "state-funded attorney", "defence", "defend")
+```
+
+## Legal Aid Organizations
+```{r}
+la_orgs_keywords <- c("legal aid organization", "public interest law firm",
+                      "law clinic", "nonprofit legal service",
+                      "legal center")
+```
+
+## Advocacy Groups Working on Criminal Justice Reform
+```{r}
+advocacy_group_keywords <- c("advocacy group", "justice reform group",
+                             "civil rights group", "advocate", "reform")
+```
+
+## Pretrial Diversion Programs
+```{r}
+pretrial_div_keywords <- c("pretrial diversion", "pretrial release", 
+                       "pretrial intervention", "judicial diversion", 
+                       "alternative sentencing", "diversion")
+```
+
+## Pretrial Supervision Services
+```{r}
+pretrial_sup_keywords <- c("pretrial monitoring", "supervised release",
+                           "pretrial probation", "pretrial assessment", 
+                           "conditional release", "bail supervision", 
+                           "judicial supervision")
+```
+
+## Risk Assessment Programs
+```{r}
+risk_assessment_keywords <- c("risk assessment", "risk evaluation", 
+                              "pretrial risk", "recidivism risk", "risk",
+                              "pretrial screening")
+```
+
+## Specialty Courts
+```{r}
+specialty_courts_keywords <- c("specialty court", "diversion court", 
+                               "treatment court", "special court", "court")
+```
+
+## Reentry Programs and Support Services
+```{r}
+reentry_program_keywords <- c("reentry", "reintegration")
+```
+
+## Employment and Vocational Programs
+```{r}
+employ_keywords <- c("job", "job training programs",
+  "vocational training services", "career development programs",
+  "workforce development initiatives", "employment skills training",
+  "occupational training programs", "skill enhancement programs",
+  "job readiness programs", "career counseling services",
+  "apprenticeship programs", "hands-on training",
+  "technical skills development", "employment placement services",
+  "industry certifications", "job search assistance",
+  "resume writing workshops", "interview preparation",
+  "career pathways", "soft skills training",
+  "labor market information", "supportive employment",
+  "community job fairs", "on-the-job training",
+  "skills assessment", "work experience programs", "training", "career")
+```
+
+## Housing Assistance for Individuals Reentering Society
+```{r}
+hous_rees_keywords <- c("transitional housing", "housing", "accommodation",
+  "reentry housing", "supportive housing services",
+  "affordable housing", "permanent supportive housing",
+  "temporary housing", "reintegration housing", "stable housing initiatives",
+  "housing navigation services", "subsidized housing for reentrants",
+  "homeless prevention programs", "case management for housing",
+  "rapid rehousing programs", "long-term housing", 
+  "family reunification housing", "safe housing", "housing counseling",
+  "employment and housing support", "housing stability programs")
+```
+
+## Education and Skill Development
+```{r}
+edu_keywords <-  c("retrain", "career transition", "adult learning",
+  "education", "skill refresh", "personal development", "continuing education",
+  "train", "skill development")
+```
+
+## Family and Social Support
+```{r}
+family_support_keywords <- c("family reintegration", "social reintegration",
+  "community support", "peer support", "family counseling", "mentorship",
+  "family", "social", "relationship"
+)
+```
+
+## Transportation Services
+```{r}
+transport_keywords <- c("transport", "transit", "bus", "commute", " ride")
+```
+
+## Community Forums and Education Sessions
+```{r}
+commu_forum_edu_keywords <- c("public meeting", "educational event", 
+                              "community forum", "community meeting",
+                              "education session", "forum"
+                              )
+```
+
+## Outreach Programs to Raise Awareness About Available Resources
+```{r}
+outreach_keywords <- c("outreach", "available resources", "resource education",
+                       "resource accessibility", "resource connection event",
+                       "resource fair")
+```
+
+## Collaboration with Community Leaders and Organizations
+```{r}
+collab_keywords <- c("partnership", "community alliance", "coalition",
+                     "collaborative effort", "community cooperation")
+```
+
+# Save data
+```{r}
+path <- here::here("data", "sub_cat_keyword_lists.RData")
+
+save(outpatient_keywords, inpatient_keywords, res_keywords, crisis_keywords,
+     emergency_keywords, harm_reduction_keywords, support_group_keywords,
+     trans_hous_keywords, boarding_homes, emergency_homeless_keywords,
+     rapid_rehousing_keywords, supportive_housing_keywords, 
+     county_funded_housing_keywords, primary_hcs_keywords, health_edu_keywords,
+     medical_access_keywords, law_community_keywords, police_training,
+     pub_def_keywords, la_orgs_keywords, advocacy_group_keywords, 
+     pretrial_div_keywords, pretrial_sup_keywords, risk_assessment_keywords,
+     specialty_courts_keywords, reentry_program_keywords, employ_keywords,
+     hous_rees_keywords, edu_keywords, family_support_keywords, 
+     transport_keywords, commu_forum_edu_keywords, outreach_keywords, 
+     collab_keywords,
+     file = path)
+```
+
+```{r}
+rm(list = ls())
+```

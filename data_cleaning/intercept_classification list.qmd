@@ -1,0 +1,11 @@
+
+## Community corrections
+
+```{r}
+comm_corr_keywords <- c("community correction", "community supervision",
+                        "probation", "parole")
+```
+
+Re-entry will include all main categories besides legal aid and legal diversion.
+
+
